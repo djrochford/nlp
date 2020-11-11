@@ -117,17 +117,17 @@ def trace_to_alignment(trace: Trace, source: str, target: str) -> Alignment:
     for address in trace:
         i_prev, j_prev = previous
         i, j = address
-        source_char = source[i-1]
-        target_char = target[j-1]
         if i_prev == i:
             align = AlignmentColumn(
-                source_char=None, target_char=target_char, edit=Edit.INSERTION
+                source_char=None, target_char=target[j-1], edit=Edit.INSERTION
             )
         elif j_prev == j:
             align = AlignmentColumn(
-                source_char=source_char, target_char=None, edit=Edit.DELETION
+                source_char=source[i-1], target_char=None, edit=Edit.DELETION
             )
         else:
+            source_char = source[i-1]
+            target_char = target[j-1]
             if source_char == target_char:
                 align = AlignmentColumn(
                     source_char=source_char, target_char=target_char, edit=None
