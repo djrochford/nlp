@@ -81,10 +81,10 @@ def min_edit_distance(
             if minimum == via_substitution:
                 distance[i, j].previous.append((i-1, j-1))
 
-    alignments = {
+    alignments = [
         trace_to_alignment(trace, source, target)
         for trace in extract_traces(distance)
-    }
+    ]
     return distance[n, m].distance, alignments
 
 

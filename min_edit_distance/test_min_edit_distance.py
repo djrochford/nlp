@@ -6,7 +6,8 @@ from unittest import TestCase
 
 import numpy as np  # type: ignore
 
-from min_edit_distance import AlignmentColumn, DistanceCell, Edit, align_to_string, extract_traces, trace_to_alignment
+from min_edit_distance import (AlignmentColumn, DistanceCell, Edit, align_to_string, extract_traces,
+                               min_edit_distance, trace_to_alignment)
 
 
 def list_to_distance_matrix(
@@ -78,7 +79,8 @@ class TestTraceToAligment(TestCase):
         alignment = trace_to_alignment(trace, source="intention", target="execution")
         expected_source_chars = ["i", "n", "t", "e", None, "n", "t", "i", "o", "n"]
         expected_target_chars = [None, "e", "x", "e", "c", "u", "t", "i", "o", "n"]
-        expected_edits = [Edit.DELETION, Edit.SUBSTITUTION, Edit.SUBSTITUTION, None, Edit.INSERTION, Edit.SUBSTITUTION, None, None, None, None]
+        expected_edits = [Edit.DELETION, Edit.SUBSTITUTION, Edit.SUBSTITUTION, None, Edit.INSERTION,
+                          Edit.SUBSTITUTION, None, None, None, None]
         for i, column in enumerate(alignment):
             self.assertEqual(column.source_char, expected_source_chars[i])
             self.assertEqual(column.target_char, expected_target_chars[i])
@@ -89,15 +91,60 @@ class TestAlignToString(TestCase):
         self.assertEqual(align_to_string([]), "\n\n")
 
     def test_single_insertion(self):
-        self.assertEqual(align_to_string([AlignmentColumn(source_char=None, target_char="E", edit=Edit.INSERTION)]), "*\nE\ni")
+        self.assertEqual(
+            align_to_string(
+                [AlignmentColumn(source_char=None, target_char="E", edit=Edit.INSERTION)]
+            ),
+            "*\nE\ni"
+        )
 
     def test_single_deletion(self):
-        self.assertEqual(align_to_string([AlignmentColumn(source_char="I", target_char=None, edit=Edit.DELETION)]), "I\n*\nd")
+        self.assertEqual(
+            align_to_string(
+                [AlignmentColumn(source_char="I", target_char=None, edit=Edit.DELETION)]
+            ),
+            "I\n*\nd"
+        )
 
     def test_single_substitution(self):
-        self.assertEqual(align_to_string([AlignmentColumn(source_char="I", target_char="E", edit=Edit.SUBSTITUTION)]), "I\nE\ns")
+        self.assertEqual(
+            align_to_string(
+                [AlignmentColumn(source_char="I", target_char="E", edit=Edit.SUBSTITUTION)]
+            ),
+            "I\nE\ns"
+        )
 
     def test_intention_execution(self):
         trace = [(1, 0), (2, 1), (3, 2), (4, 3), (4, 4), (5, 5), (6, 6), (7, 7), (8, 8), (9, 9)]
         alignment = trace_to_alignment(trace, source="INTENTION", target="EXECUTION")
         self.assertEqual(align_to_string(alignment), "INTE*NTION\n*EXECUTION\ndss is    ")
+
+
+class TestMinEditDistance(TestCase):
+    def test_null_case(self):
+        distance, alignments = min_edit_distance(source="", target="")
+        self.assertEqual(distance, 0)
+        self.assertEqual(alignments, [[]])
+
+    def test_single_insertion(self):
+        distance, alignments = min_edit_distance(source="", target="E")
+        self.assertEqual(distance, 1)
+        self.assertEqual(len(alignments), 1)
+        self.assertEqual(align_to_string(alignments[0]), "*\nE\ni")
+
+    def test_single_deletion(self):
+        distance, alignments = min_edit_distance(source="I", target="")
+        self.assertEqual(distance, 1)
+        self.assertEqual(len(alignments), 1)
+        self.assertEqual(align_to_string(alignments[0]), "I\n*\nd")
+
+    def test_single_substitution(self):
+        distance, alignments = min_edit_distance(source="I", target="E")
+        self.assertEqual(distance, 2)
+        self.assertEqual(len(alignments), 3)
+        alignment_strings = {align_to_string(alignment) for alignment in alignments}
+        self.assertEqual(alignment_strings, {"*I\nE*\nid", "I*\n*E\ndi", "I\nE\ns"})
+
+    def test_intention_execution(self):
+        distance, alignments = min_edit_distance(source="INTENTION", target="EXECUTION")
+        self.assertEqual(distance, 8)
