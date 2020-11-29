@@ -23,7 +23,7 @@ def list_to_distance_matrix(
     ])
 
 
-class TestExtracttTraces(TestCase):
+class TestExtractTraces(TestCase):
     def test_null_case(self):
         null_case = list_to_distance_matrix([[(0, [])]])
         self.assertEqual(extract_traces(null_case), [[]])
