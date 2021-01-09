@@ -52,6 +52,7 @@ class TestExtractTraces(TestCase):
         traces = extract_traces(up_and_left)
         self.assertEqual(len(traces), 6)
 
+
 class TestTraceToAligment(TestCase):
     def test_null_case(self):
         self.assertEqual(trace_to_alignment([], source="", target=""), [])
