@@ -41,6 +41,7 @@ class NgramModel:
         """
         return self._order
 
+
 BEGIN_TOKEN = "<s>"
 END_TOKEN = "</s>"
 
