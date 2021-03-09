@@ -52,17 +52,17 @@ function calculate_probabilities(counts::CountContainer)::NgramContainer
     probabilities = [
         DefaultDict{Tuple{Vararg{String}}, Float64}(0.0) for _ = 1:length(counts)
     ]
-    unigrams = counts[0]
+    unigrams = counts[1]
     total_unigrams = 0
     for number in values(unigrams)
         total_unigrams += number
     end
     for (i, ngram_count) in enumerate(counts)
-        for ngram in ngram_count
+        for ngram in keys(ngram_count)
             if i == 1
                 denominator = total_unigrams
             else
-                denominator = counts[i - 1][last(ngram)]
+                denominator = counts[i - 1][reverse(Base.tail(reverse(ngram)))]
             end
             probabilities[i][ngram] = ngram_count[ngram] / denominator
         end

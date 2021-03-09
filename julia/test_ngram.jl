@@ -5,7 +5,13 @@ import DataStructures.DefaultDict
 import Languages.English
 
 include("ngram.jl")
-import .Ngram: BEGIN_TOKEN, END_TOKEN, CountContainer, ngram_count
+import .Ngram:
+    BEGIN_TOKEN,
+    END_TOKEN,
+    CountContainer,
+    NgramContainer,
+    calculate_probabilities,
+    ngram_count
 
 SIMPLE_CORPUS = "I am Sam. Sam I am. I do not like green eggs and ham."
 
@@ -77,6 +83,8 @@ EXPECTED_COUNTS = [
     Dict(),
 ]
 
+total_unigrams = sum(get(EXPECTED_COUNTS[1], gram, 1) for gram in EXPECTED_GRAMS[1])
+
 function run_ngram_count_test(order::Int, count_vec::CountContainer)::Nothing
     if order == 0
         return nothing
@@ -95,13 +103,40 @@ function run_ngram_count_test(order::Int, count_vec::CountContainer)::Nothing
 end
 
 function run_ngram_count_test(order::Int)::Nothing
-    count_vec = ngram_count(order, SIMPLE_CORPUS, English())
-    run_ngram_count_test(order, count_vec)
+    run_ngram_count_test(order, ngram_count(order, SIMPLE_CORPUS, English()))
     return nothing
 end
 
 run_ngram_count_test(1)
 run_ngram_count_test(2)
 run_ngram_count_test(3)
+
+function run_calculate_probs_test(order::Int, prob_vec::NgramContainer)::Nothing
+    if order == 0
+        return nothing
+    end
+    @testset "calculate_probabilities -- order $order" begin
+        expected_grams = EXPECTED_GRAMS[order]
+        probs = prob_vec[order]
+        for gram in expected_grams
+            if order == 1
+                denominator = total_unigrams
+            else
+                denominator =
+                    get(EXPECTED_COUNTS[order-1], reverse(Base.tail(reverse(gram))), 1)
+            end
+            @test probs[gram] == get(EXPECTED_COUNTS[order], gram, 1) / denominator
+        end
+    end
+    run_calculate_probs_test(order - 1, prob_vec)
+end
+
+function run_calculate_probs_test(order::Int)::Nothing
+    prob_vec = calculate_probabilities(ngram_count(order, SIMPLE_CORPUS, English()))
+    run_calculate_probs_test(order, prob_vec)
+end
+
+run_calculate_probs_test(1)
+run_calculate_probs_test(2)
 
 end
