@@ -83,6 +83,43 @@ EXPECTED_COUNTS = [
     Dict(),
 ]
 
+EXPECTED_PROBS = [
+    DefaultDict(
+        1 / 23,
+        Dict(
+            (BEGIN_TOKEN,) => 3 / 23,
+            ("I",) => 3 / 23,
+            (".",) => 3 / 23,
+            (END_TOKEN,) => 3 / 23,
+            ("am",) => 2 / 23,
+            ("Sam",) => 2 / 23,
+        ),
+    ),
+    DefaultDict(
+        1,
+        Dict(
+            (BEGIN_TOKEN, "I") => 2 / 3,
+            (BEGIN_TOKEN, "Sam") => 1 / 3,
+            ("I", "am") => 2 / 3,
+            ("I", "do") => 1 / 3,
+            (".", END_TOKEN) => 1,
+            ("am", "Sam") => 1 / 2,
+            ("am", ".") => 1 / 2,
+            ("Sam", "I") => 1 / 2,
+            ("Sam", ".") => 1 / 2,
+        ),
+    ),
+    DefaultDict(
+        1,
+        Dict(
+            (BEGIN_TOKEN, "I", "am") => 1 / 2,
+            (BEGIN_TOKEN, "I", "do") => 1 / 2,
+            ("I", "am", "Sam") => 1 / 2,
+            ("I", "am", ".") => 1 / 2,
+        ),
+    ),
+]
+
 total_unigrams = sum(get(EXPECTED_COUNTS[1], gram, 1) for gram in EXPECTED_GRAMS[1])
 
 function run_ngram_count_test(order::Int, count_vec::CountContainer)::Nothing
@@ -116,16 +153,10 @@ function run_calculate_probs_test(order::Int, prob_vec::NgramContainer)::Nothing
         return nothing
     end
     @testset "calculate_probabilities -- order $order" begin
-        expected_grams = EXPECTED_GRAMS[order]
+        expected_probs = EXPECTED_PROBS[order]
         probs = prob_vec[order]
-        for gram in expected_grams
-            if order == 1
-                denominator = total_unigrams
-            else
-                denominator =
-                    get(EXPECTED_COUNTS[order-1], reverse(Base.tail(reverse(gram))), 1)
-            end
-            @test probs[gram] == get(EXPECTED_COUNTS[order], gram, 1) / denominator
+        for gram in EXPECTED_GRAMS[order]
+            @test probs[gram] == expected_probs[gram]
         end
     end
     run_calculate_probs_test(order - 1, prob_vec)
